@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editar Tarea</title>
+    <link rel="stylesheet" href="/css/formTask.css" />
+    <link rel="stylesheet" href="/css/toastify.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Editar Tarea</h1>
+      <form id="task-form" data-id="<%= taskId %>">
+        <div class="form-group">
+          <label for="title">Título:</label>
+          <input type="text" id="title" name="title" required />
+        </div>
+        <div class="form-group">
+          <label for="description">Descripción:</label>
+          <textarea
+            id="description"
+            name="description"
+            rows="4"
+            required
+          ></textarea>
+        </div>
+        <div class="form-group">
+          <label for="category">Categoría:</label>
+          <select name="category" id="category">
+            <option value="Trabajo">Trabajo</option>
+            <option value="Estudio">Estudio</option>
+            <option value="Personal">Personal</option>
+            <option value="Proyectos">Proyectos</option>
+            <option value="Compras">Compras</option>
+            <option value="Salud">Salud</option>
+            <option value="Familia">Familia</option>
+            <option value="Finanzas">Finanzas</option>
+            <option value="Entretenimiento">Entretenimiento</option>
+            <option value="Viajes">Viajes</option>
+            <option value="Deportes">Deportes</option>
+            <option value="Tecnología">Tecnología</option>
+            <option value="Hogar">Hogar</option>
+            <option value="Amigos">Amigos</option>
+            <option value="Eventos">Eventos</option>
+            <option value="Alimentación">Alimentación</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="dueDate">Fecha de Vencimiento:</label>
+          <input type="date" id="dueDate" name="dueDate" />
+        </div>
+
+        <div class="form-group">
+          <label for="completed">Completada:</label>
+          <select id="completed" name="completed">
+            <option value="No">No</option>
+            <option value="Sí">Sí</option>
+          </select>
+        </div>
+        <button type="submit">Actualizar Tarea</button>
+        <a href="/tasks/home">Regresar</a>
+      </form>
+    </main>
+  </body>
+  <script src="/js/toastify.js"></script>
+  <script>
+    const taskForm = document.getElementById("task-form");
+    const taskId = taskForm.getAttribute("data-id");
+
+    taskForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(taskForm); // Recopila los datos del formulario
+      let completed = formData.get("completed");
+      formData.set("completed", completed == "Sí");
+
+      fetch("/tasks/tasks/" + taskId, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+        },
+        body: new URLSearchParams(formData).toString(), // Convierte el FormData a una cadena
+      })
+        .then((response) => {
+          if (response.ok) {
+            // Si la respuesta tiene un código de estado HTTP exitoso (en el rango 200-299)
+            return response.json(); // Procesar la respuesta exitosa
+          } else {
+            return response.json().then((errorData) => {
+              console.log("Error del servidor: ", errorData.message);
+              throw new Error(errorData.message);
+            });
+          }
+        })
+        .then((data) => {
+          Toastify({
+            text: data.message,
+            duration: 4000,
+            style: {
+              background: "linear-gradient(to right, #22c55e, #15803d)",
+            },
+          }).showToast();
+        })
+        .catch((error) => {
+          Toastify({
+            text: error,
+            duration: 4000,
+            style: {
+              background: "linear-gradient(to right, #ef4444, #b91c1c)",
+            },
+          }).showToast();
+        });
+    });
+
+    function load() {
+      fetch("/tasks/tasks/" + taskId, {
+        method: "GET",
+      })
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            return response.json().then((errorData) => {
+              console.log("Error del servidor: ", errorData.message);
+              throw new Error(errorData.message);
+            });
+          }
+        })
+        .then((data) => {
+          //Cargar en el form
+          // Cargar los datos en el formulario
+          document.getElementById("title").value = data.title;
+          document.getElementById("description").value = data.description;
+          document.getElementById("category").value = data.category;
+          document.getElementById("dueDate").value = data.dueDate.split("T")[0]; // Formatear la fecha
+          document.getElementById("completed").value = data.completed
+            ? "Sí"
+            : "No";
+        })
+        .catch((error) => {
+          Toastify({
+            text: error,
+            duration: 4000,
+            style: {
+              background: "linear-gradient(to right, #ef4444, #b91c1c)",
+            },
+          }).showToast();
+        });
+    }
+
+    load();
+  </script>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tareas</title>
+    <link rel="stylesheet" href="/css/toastify.css" />
+    <link rel="stylesheet" href="/css/tasks.css" />
+</head>
+<body>
+    <header>
+        <div class="menu">
+            <div class="logo">Nombre de la Aplicación</div>
+            <div class="options">
+                <a href="./new">Crear Tarea</a>
+                <a onclick="logout()">Cerrar Sesión</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <h1>Tareas Pendientes</h1>
+        <div>
+          <form id="task-form">
+          
+            <div class="form-group">
+                <label for="category">Obtener categoria especifica:</label>
+                <select name="category" id="category">
+                  <option value="Todos">Todos</option>
+                  <option value="Trabajo">Trabajo</option>
+                  <option value="Estudio">Estudio</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Proyectos">Proyectos</option>
+                  <option value="Compras">Compras</option>
+                  <option value="Salud">Salud</option>
+                  <option value="Familia">Familia</option>
+                  <option value="Finanzas">Finanzas</option>
+                  <option value="Entretenimiento">Entretenimiento</option>
+                  <option value="Viajes">Viajes</option>
+                  <option value="Deportes">Deportes</option>
+                  <option value="Tecnología">Tecnología</option>
+                  <option value="Hogar">Hogar</option>
+                  <option value="Amigos">Amigos</option>
+                  <option value="Eventos">Eventos</option>
+                  <option value="Alimentación">Alimentación</option>
+                  <option value="Otro">Otro</option>
+                </select>
+                
+            </div>
+        </form>
+        <button id="order">Ordenar por categoria</button>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Descripción</th>
+                    <th>Categoría</th>
+                    <th>Fecha de Vencimiento</th>
+                    <th>Completada</th>
+                    <th>Opciones</th>
+                </tr>
+            </thead>
+            <tbody id="task-list">
+                <!-- Agrega más filas de la tabla según sea necesario -->
+            </tbody>
+        </table>
+    </main>
+</body>
+</html>
+<script src="/js/toastify.js"></script>
+<script>
+
+const taskList = document.getElementById("task-list");
+const category = document.getElementById("category");
+const order = document.getElementById("order");
+
+
+function logout(){
+  fetch("/users/logout", {
+    method: "POST"
+  })
+    .then((response) => {
+      if (response.ok) {
+          window.location.href = '/users/access';
+      } else {
+        return response.json().then((errorData) => {
+          console.log("Error del servidor: ", errorData.message);
+          throw new Error(errorData.message);
+        });
+      }
+    })
+    .catch((error) => {
+      Toastify({
+        text: error,
+        duration: 4000,
+        style: {
+          background: "linear-gradient(to right, #ef4444, #b91c1c)",
+        },
+      }).showToast();
+    });
+}
+function load(url){
+  fetch(url, {
+    method: "GET"
+  })
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        return response.json().then((errorData) => {
+          console.log("Error del servidor: ", errorData.message);
+          throw new Error(errorData.message);
+        });
+      }
+    })
+    .then((data) => {
+      taskList.innerHTML = '';
+      data.forEach(task => {
+      addTaskToTable(task);
+  });
+    })
+    .catch((error) => {
+      Toastify({
+        text: error,
+        duration: 4000,
+        style: {
+          background: "linear-gradient(to right, #ef4444, #b91c1c)",
+        },
+      }).showToast();
+    });
+}
+
+load("/tasks/tasks");
+ 
+function deleteTask(id) { 
+  if (confirm('Desea eliminar esta tarea?')) {
+    fetch("/tasks/tasks/"+id, {method: "DELETE",})
+        .then((response) => {
+          console.log(response)
+          if (response.ok) {
+            // Si la respuesta tiene un código de estado HTTP exitoso (en el rango 200-299)
+            return response.json(); // Procesar la respuesta exitosa
+          } else {
+            return response.json().then((errorData) => {
+              console.log("Error del servidor: ", errorData.message);
+              throw new Error(errorData.message);
+            });
+          }
+        })
+        .then((data) => {
+          Toastify({
+            text: data.message,
+            duration: 4000,
+            style: {
+              background: "linear-gradient(to right, #22c55e, #15803d)",
+            },
+          }).showToast();
+          load();
+        })
+        .catch((error) => {
+          Toastify({
+            text: error,
+            duration: 4000,
+            style: {
+              background: "linear-gradient(to right, #ef4444, #b91c1c)",
+            },
+          }).showToast();
+        });
+  }
+}
+function completeTask(id) { 
+  if (confirm('Desea marcar esta tarea como completada?')) {
+    fetch("/tasks/tasks/"+id+"/complete", {method: "PATCH",})
+        .then((response) => {
+          console.log(response)
+          if (response.ok) {
+            // Si la respuesta tiene un código de estado HTTP exitoso (en el rango 200-299)
+            return response.json(); // Procesar la respuesta exitosa
+          } else {
+            return response.json().then((errorData) => {
+              console.log("Error del servidor: ", errorData.message);
+              throw new Error(errorData.message);
+            });
+          }
+        })
+        .then((data) => {
+          Toastify({
+            text: data.message,
+            duration: 4000,
+            style: {
+              background: "linear-gradient(to right, #22c55e, #15803d)",
+            },
+          }).showToast();
+          load();
+        })
+        .catch((error) => {
+          Toastify({
+            text: error,
+            duration: 4000,
+            style: {
+              background: "linear-gradient(to right, #ef4444, #b91c1c)",
+            },
+          }).showToast();
+        });
+  }
+}
+function updateTask(id){
+  window.location.href = '/tasks/edit/'+id;
+}
+
+
+category.addEventListener('change', ()=>{
+  let option = category.value;
+  if (option == 'Todos') {
+    load("/tasks/tasks");
+  } else {
+    load("/tasks/tasks/category/"+option);
+  }
+});
+
+order.addEventListener('click', ()=>{
+  load("/tasks/tasks/order/category");
+});
+
+
+function addTaskToTable(task) {
+      const row = document.createElement("tr");
+      let html = `
+          <td>${task.title}</td>
+          <td>${task.description}</td>
+          <td>${task.category}</td>
+          <td>${task.dueDate.substring(0, 10)}</td>
+          <td>${task.completed ? "Sí" : "No"}</td>
+          <td>`
+          if (!task.completed) {
+            html += `<button class="task" onclick="completeTask('${task._id}')">Completar</button>`
+          }
+          html +=  `<button class="edit-button" onclick="updateTask('${task._id}')">Editar</button>
+              <button class="delete-button" onclick="deleteTask('${task._id}')">Eliminar</button>
+          </td>
+      `;
+      row.innerHTML = html;
+      taskList.appendChild(row);
+}
+
+
+
+</script>
+</html>

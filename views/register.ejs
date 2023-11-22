@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registrarse</title>
+    <link rel="stylesheet" href="/css/forms.css" />
+    <link rel="stylesheet" href="/css/toastify.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Registrarse</h1>
+      <form id="register-form" enctype="multipart/form-data">
+        <div class="input-container">
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="Usuario"
+            required
+          />
+        </div>
+        <div class="input-container">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Contraseña"
+            required
+          />
+        </div>
+        <button type="submit">Registrar</button>
+      </form>
+      <p>¿Ya tienes una cuenta? <a href="/users/access">Iniciar Sesión</a></p>
+    </div>
+    <script src="/js/toastify.js"></script>
+    <script>
+      const registerForm = document.getElementById("register-form");
+
+      registerForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(registerForm); // Recopila los datos del formulario
+
+        fetch("/users/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+          },
+          body: new URLSearchParams(formData).toString(), // Convierte el FormData a una cadena
+        })
+          .then((response) => {
+            if (response.ok) {
+              // Si la respuesta tiene un código de estado HTTP exitoso (en el rango 200-299)
+              return response.json(); // Procesar la respuesta exitosa
+            } else {
+              return response.json().then((errorData) => {
+                console.log("Error del servidor: ", errorData.message);
+                throw new Error(errorData.message);
+              });
+            }
+          })
+          .then((data) => {
+            Toastify({
+              text: data.message,
+              duration: 4000,
+              style: {
+                background: "linear-gradient(to right, #22c55e, #15803d)",
+              },
+            }).showToast();
+            registerForm.reset();
+          })
+          .catch((error) => {
+            Toastify({
+              text: error,
+              duration: 4000,
+              style: {
+                background: "linear-gradient(to right, #ef4444, #b91c1c)",
+              },
+            }).showToast();
+          });
+      });
+    </script>
+  </body>
+</html>

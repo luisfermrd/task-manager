@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iniciar Sesión</title>
+    <link rel="stylesheet" href="/css/forms.css" />
+    <link rel="stylesheet" href="/css/toastify.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Iniciar Sesión</h1>
+      <form id="login-form">
+        <div class="input-container">
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="Usuario"
+            required
+          />
+        </div>
+        <div class="input-container">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Contraseña"
+            required
+          />
+        </div>
+        <button type="submit">Iniciar Sesión</button>
+      </form>
+      <p>¿No tienes una cuenta? <a href="/users/singin">Regístrate</a></p>
+    </div>
+    <script src="/js/toastify.js"></script>
+    <script>
+      const loginForm = document.getElementById("login-form");
+
+      loginForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(loginForm); // Recopila los datos del formulario
+
+        fetch("/users/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+          },
+          body: new URLSearchParams(formData).toString(), // Convierte el FormData a una cadena
+        })
+          .then((response) => {
+            if (response.ok) {
+              // Si la respuesta tiene un código de estado HTTP exitoso (en el rango 200-299)
+              return response.json(); // Procesar la respuesta exitosa
+            } else {
+              return response.json().then((errorData) => {
+                console.log("Error del servidor: ", errorData.message);
+                throw new Error(errorData.message);
+              });
+            }
+          })
+          .then((data) => {
+            window.location.href = "/tasks/home";
+          })
+          .catch((error) => {
+            Toastify({
+              text: error,
+              duration: 4000,
+              style: {
+                background: "linear-gradient(to right, #ef4444, #b91c1c)",
+              },
+            }).showToast();
+          });
+      });
+    </script>
+  </body>
+</html>
